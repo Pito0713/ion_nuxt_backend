@@ -1,0 +1,21 @@
+# === Java ===
+*.class
+*.log
+*.jar
+*.war
+
+# === Maven ===
+target/
+
+# === IntelliJ ===
+.idea/
+*.iws
+*.ipr
+*.iml
+
+# === macOS ===
+.DS_Store
+
+# Ignore real secret config
+src/main/resources/application-secret.properties
+
