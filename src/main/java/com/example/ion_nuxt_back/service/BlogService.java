@@ -76,6 +76,21 @@ public class BlogService {
         }
     }
 
+    // Get 取得 Blog 文章
+    public ResponseEntity<ApiResponse<?>> getSingleBlog (
+            String id
+    ) {
+        try {
+            Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+            Blog blog = mongoTemplate.findOne(query, Blog.class); // 只會回傳單筆
+            return ResponseEntity.ok(ApiResponse.success(blog));
+        } catch (Exception e) {
+            // 回傳錯誤 response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("server_error", 1003));
+        }
+    }
+
     public ResponseEntity<ApiResponse<?>> editBlog (
             PostBlogReqDTO request,
             String id
