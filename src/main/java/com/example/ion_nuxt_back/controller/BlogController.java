@@ -20,13 +20,21 @@ public class BlogController {
         return blogService.postBlog(request, userUUID);
     }
 
-    // Get 取的 Blog 文章
+    // Get 搜尋 Blog 文章
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getBlogC(
             @RequestParam int page,
             @RequestParam int pageSize
     ) {
         return blogService.getBlog(page, pageSize);
+    }
+
+    // Get 取得 Blog 文章
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getSingleBlogC(
+            @PathVariable String id
+    ) {
+        return blogService.getSingleBlog(id);
     }
 
     // Post 編輯 Blog 文章
