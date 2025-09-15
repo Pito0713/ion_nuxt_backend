@@ -15,10 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class TagsService {
@@ -36,6 +33,9 @@ public class TagsService {
             tags.setUuid(UUID.randomUUID().toString());
             tags.setTagCounts(0);
             tags.setBlogs(new ArrayList<>());
+            tags.setCreateTime(new Date());
+            tags.setUpdateTime(new Date());
+            tags.setImgURL("");
 
             tagsRepository.save(tags);
             return ResponseEntity.ok(ApiResponse.success(null));
@@ -50,7 +50,15 @@ public class TagsService {
         try {
             List<Tags> tags = tagsRepository.findAll();
             List<PostTagsResDTO> optionalTag = tags.stream()
-                    .map(tag -> new PostTagsResDTO(tag.getLabel(), tag.getUuid(), tag.getTagCounts()))
+                    .map(tag -> new PostTagsResDTO(
+                            tag.getLabel(),
+                            tag.getUuid(),
+                            tag.getTagCounts(),
+                            tag.getImgURL(),
+                            tag.getCreateTime(),
+                            tag.getUpdateTime(),
+                            tag.getBlogs()
+                    ))
                     .toList();
 
             return ResponseEntity.ok(ApiResponse.success(optionalTag));

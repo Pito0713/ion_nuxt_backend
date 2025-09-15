@@ -21,6 +21,7 @@ public class Tags {
     private Date createTime;
     private Date updateTime;
     private Integer tagCounts;
+    private String imgURL;
     private List<Blogs> blogs;
     // inner class
     //  Lombok
