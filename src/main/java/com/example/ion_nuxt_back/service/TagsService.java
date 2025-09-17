@@ -2,6 +2,7 @@ package com.example.ion_nuxt_back.service;
 import com.example.ion_nuxt_back.common.ApiResponse;
 
 import com.example.ion_nuxt_back.dto.tags.response.PostTagsResDTO;
+import com.example.ion_nuxt_back.dto.tags.response.PostEditTagsResDTO;
 import com.example.ion_nuxt_back.dto.tags.resquest.PostTagsReqDTO;
 import com.example.ion_nuxt_back.model.Tags;
 import com.example.ion_nuxt_back.repository.TagsRepository;
@@ -70,7 +71,7 @@ public class TagsService {
     }
 
     public ResponseEntity<ApiResponse<?>> editTag (
-            PostTagsReqDTO request,
+            PostEditTagsResDTO request,
             String uuid
     ) {
         try {
@@ -85,8 +86,10 @@ public class TagsService {
 
             String id = tagsItem.getId();
             Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+            System.out.println( request.getImgURL());
             Update update = new Update()
-                    .set("label", request.getLabel());
+                    .set("label", request.getLabel())
+                    .set("imgURL", request.getImgURL());
             mongoTemplate.updateFirst(query, update, Tags.class);
 
             return ResponseEntity.ok(ApiResponse.success(null));
