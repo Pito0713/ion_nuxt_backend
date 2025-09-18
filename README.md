@@ -1,7 +1,9 @@
-# ion_nuxt_backend
+# ion_nuxt_backend 文檔
 ### Spring Boot + MongoDB RESTful API 文檔
 使用 Spring Boot 搭配 MongoDB 所構建的簡單 RESTful API，
 提供基本的 CRUD 功能。
+
+## 當前版本: [V1.0.1](###V1.0.1)
 
 ---
 
@@ -17,12 +19,16 @@
 ```
 src/main/java/com/example/ion_nuxt_back/
 ├── config
-│  
 ├── controller
 │   ├── BlogController.java
 │   ├── TagsController.java
 │   └── UserController.java
 ├── dto
+│   ├── blogs
+│   ├── tags
+│   └── users
+├── exception
+│   └── GlobalExceptionHandler.java
 ├── model
 │   ├── Blog.java
 │   ├── Tags.java
@@ -90,6 +96,12 @@ public User refreshTokenC() {}
 public User userPasswordChangeC() {}
 ```
 
+### ImageKitAuthController.java
+```java
+@GetMapping("/auth")   // 讀取 ImageKit auth 參數
+public Map<String, String> getAuth() {}
+```
+
 ---
 
 ## 4. application.properties
@@ -103,3 +115,16 @@ mongodb.database= Data Local
 使用 MongoDB Atlas，替換對應參數
 
 ---
+
+### V1.0.1
+
+```
+新增 外部資料庫 imagekit Controller 取值
+```
+
+
+### V1.0.0
+
+```
+專案初始化 新增各頁面架構
+```
