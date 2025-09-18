@@ -1,6 +1,7 @@
 package com.example.ion_nuxt_back.controller;
 import com.example.ion_nuxt_back.common.ApiResponse;
-import com.example.ion_nuxt_back.dto.tags.resquest.PostTagsReqDTO;
+import com.example.ion_nuxt_back.dto.tags.response.PostEditTagsResDTO;
+import com.example.ion_nuxt_back.dto.tags.response.PostTagsResDTO;
 import com.example.ion_nuxt_back.service.TagsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,7 @@ public class TagsController {
     // Post 新增 tags 標籤;
     @PostMapping
     public ResponseEntity<ApiResponse<?>> postTagsC(
-            @RequestBody PostTagsReqDTO request
+            @RequestBody PostTagsResDTO request
     ) {
         return tagsService.postTags(request);
     }
@@ -28,7 +29,7 @@ public class TagsController {
     // Post 編輯 Tags 標籤;
     @PostMapping("/{uuid}")
     public ResponseEntity<ApiResponse<?>> editTagC (
-            @RequestBody PostTagsReqDTO request,
+            @RequestBody PostEditTagsResDTO request,
             @PathVariable String uuid
     ) {
         return tagsService.editTag(request, uuid);

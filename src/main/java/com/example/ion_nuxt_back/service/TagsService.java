@@ -2,6 +2,7 @@ package com.example.ion_nuxt_back.service;
 import com.example.ion_nuxt_back.common.ApiResponse;
 
 import com.example.ion_nuxt_back.dto.tags.response.PostTagsResDTO;
+import com.example.ion_nuxt_back.dto.tags.response.PostEditTagsResDTO;
 import com.example.ion_nuxt_back.dto.tags.resquest.PostTagsReqDTO;
 import com.example.ion_nuxt_back.model.Tags;
 import com.example.ion_nuxt_back.repository.TagsRepository;
@@ -15,28 +16,28 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class TagsService {
     @Autowired private TagsRepository tagsRepository;
     @Autowired private MongoTemplate mongoTemplate;
     public ResponseEntity<ApiResponse<?>> postTags(
-            PostTagsReqDTO request
+            PostTagsResDTO request
     ) {
         try {
             // param
-            String text = request.getLabel();
+            String label = request.getLabel();
+            String imgUrl = request.getImgURL();
 
             Tags tags = new Tags();
-            tags.setLabel(text);
+            tags.setLabel(label);
+            tags.setImgURL(imgUrl);
             tags.setUuid(UUID.randomUUID().toString());
             tags.setTagCounts(0);
             tags.setBlogs(new ArrayList<>());
-
+            tags.setCreateTime(new Date());
+            tags.setUpdateTime(new Date());
             tagsRepository.save(tags);
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
@@ -49,12 +50,14 @@ public class TagsService {
     public ResponseEntity<ApiResponse<?>> getTags() {
         try {
             List<Tags> tags = tagsRepository.findAll();
-            System.out.println(tags);
-            List<PostTagsResDTO> optionalTag = tags.stream()
-                    .map(tag -> new PostTagsResDTO(
+            List<PostTagsReqDTO> optionalTag = tags.stream()
+                    .map(tag -> new PostTagsReqDTO(
                             tag.getLabel(),
                             tag.getUuid(),
                             tag.getTagCounts(),
+                            tag.getImgURL(),
+                            tag.getCreateTime(),
+                            tag.getUpdateTime(),
                             tag.getBlogs()
                     ))
                     .toList();
@@ -68,7 +71,7 @@ public class TagsService {
     }
 
     public ResponseEntity<ApiResponse<?>> editTag (
-            PostTagsReqDTO request,
+            PostEditTagsResDTO request,
             String uuid
     ) {
         try {
@@ -83,8 +86,10 @@ public class TagsService {
 
             String id = tagsItem.getId();
             Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+            System.out.println( request.getImgURL());
             Update update = new Update()
-                    .set("label", request.getLabel());
+                    .set("label", request.getLabel())
+                    .set("imgURL", request.getImgURL());
             mongoTemplate.updateFirst(query, update, Tags.class);
 
             return ResponseEntity.ok(ApiResponse.success(null));
