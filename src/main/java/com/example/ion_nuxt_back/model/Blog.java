@@ -19,18 +19,9 @@ public class Blog {
     private String title;
     private String textContent;
     private String userUUID;
-    private List<Tags> tags;
+    private String tag;
+    private String previewText;
     private Date createTime;
     private Date updateTime;
     private Integer blogCounts;
-
-    // inner class
-    //  Lombok
-    @Data //  auto getter, setter, toString, equals, hashCode
-    @NoArgsConstructor // 無參數建構子
-    @AllArgsConstructor // 全參數建構子
-    public static class Tags {
-        private String uuid;
-        private String label;
-    }
 }

@@ -49,8 +49,14 @@ public class TagsService {
     public ResponseEntity<ApiResponse<?>> getTags() {
         try {
             List<Tags> tags = tagsRepository.findAll();
+            System.out.println(tags);
             List<PostTagsResDTO> optionalTag = tags.stream()
-                    .map(tag -> new PostTagsResDTO(tag.getLabel(), tag.getUuid(), tag.getTagCounts()))
+                    .map(tag -> new PostTagsResDTO(
+                            tag.getLabel(),
+                            tag.getUuid(),
+                            tag.getTagCounts(),
+                            tag.getBlogs()
+                    ))
                     .toList();
 
             return ResponseEntity.ok(ApiResponse.success(optionalTag));

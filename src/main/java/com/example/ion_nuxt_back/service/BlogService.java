@@ -3,8 +3,11 @@ import com.example.ion_nuxt_back.common.ApiResponse;
 import com.example.ion_nuxt_back.dto.blogs.requset.PostBlogReqDTO;
 import com.example.ion_nuxt_back.model.Blog;
 
+import com.example.ion_nuxt_back.model.Tags;
 import com.example.ion_nuxt_back.repository.BlogRepository;
+import com.example.ion_nuxt_back.repository.TagsRepository;
 import org.bson.types.ObjectId;
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -22,7 +25,10 @@ import java.util.Optional;
 @Service
 public class BlogService {
     @Autowired private BlogRepository blogRepository;
+    @Autowired private TagsRepository tagsRepository;
     @Autowired private MongoTemplate mongoTemplate;
+
+    // Post 新增 Blog 文章
     public ResponseEntity<ApiResponse<?>> postBlog(
             PostBlogReqDTO request,
             String userUUID
@@ -32,12 +38,44 @@ public class BlogService {
             blog.setTitle(request.getTitle());
             blog.setTextContent(request.getTextContent());
             blog.setUserUUID(userUUID);
-            // blog.setTags(request.getTags());
+            blog.setTag(request.getTag());
             blog.setCreateTime(new Date());
             blog.setUpdateTime(null);
             blog.setBlogCounts(0);
 
-            blogRepository.save(blog);
+            // 使用 Jsoup 函式庫將 HTML 轉換為純文字
+            String plainText = Jsoup.parse(request.getTextContent()).text();
+            if (request.getTextContent() == null || request.getTextContent().isEmpty()) {
+                blog.setPreviewText("");
+            }
+
+            // 截取前 100 個字元
+            if (plainText.length() > 150) {
+                blog.setPreviewText(plainText.substring(0, 150) + "...");
+            } else {
+                blog.setPreviewText(plainText);
+            }
+
+            Blog savedBlog = blogRepository.save(blog);
+            // 取得生成的 ObjectId
+            String blogId = savedBlog.getId();
+
+
+            Optional<Tags> optionalTags = tagsRepository.findByUuid(request.getTag());
+            // target Tags exist check
+            if (optionalTags.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("account_error", 1007));
+            }
+            Tags tagsItem = optionalTags.get();
+
+            String id = tagsItem.getId();
+            Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+            Tags.Blogs newBlog = new Tags.Blogs(blogId, blog.getTitle());
+            Update update = new Update()
+                    .push("blogs", newBlog);
+            mongoTemplate.updateFirst(query, update, Tags.class);
+
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
             // 回傳錯誤 response
@@ -45,6 +83,8 @@ public class BlogService {
                     .body(ApiResponse.error("server_error", 1003));
         }
     }
+
+
 
     public ResponseEntity<ApiResponse<?>> getBlog(
             Integer page,
@@ -83,6 +123,10 @@ public class BlogService {
         try {
             Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
             Blog blog = mongoTemplate.findOne(query, Blog.class); // 只會回傳單筆
+            assert blog != null;
+            Update update = new Update()
+                    .set("blogCounts",blog.getBlogCounts() + 1);
+            mongoTemplate.updateFirst(query, update, Blog.class);
             return ResponseEntity.ok(ApiResponse.success(blog));
         } catch (Exception e) {
             // 回傳錯誤 response
@@ -100,7 +144,7 @@ public class BlogService {
             Update update = new Update()
                     .set("title", request.getTitle())
                     .set("textContent", request.getTextContent())
-                    .set("tags", request.getTags())
+                    .set("tags", request.getTag())
                     .set("updateTime", new Date());
             mongoTemplate.updateFirst(query, update, Blog.class);
             return ResponseEntity.ok(ApiResponse.success(null));

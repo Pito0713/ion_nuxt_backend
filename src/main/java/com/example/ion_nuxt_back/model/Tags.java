@@ -28,7 +28,6 @@ public class Tags {
     @NoArgsConstructor // 無參數建構子
     @AllArgsConstructor // 全參數建構子
     public static class Blogs {
-        @Id
         private String id;
         private String title;
     }
