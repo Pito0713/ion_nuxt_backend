@@ -23,21 +23,21 @@ public class TagsService {
     @Autowired private TagsRepository tagsRepository;
     @Autowired private MongoTemplate mongoTemplate;
     public ResponseEntity<ApiResponse<?>> postTags(
-            PostTagsReqDTO request
+            PostTagsResDTO request
     ) {
         try {
             // param
-            String text = request.getLabel();
+            String label = request.getLabel();
+            String imgUrl = request.getImgURL();
 
             Tags tags = new Tags();
-            tags.setLabel(text);
+            tags.setLabel(label);
+            tags.setImgURL(imgUrl);
             tags.setUuid(UUID.randomUUID().toString());
             tags.setTagCounts(0);
             tags.setBlogs(new ArrayList<>());
             tags.setCreateTime(new Date());
             tags.setUpdateTime(new Date());
-            tags.setImgURL("");
-
             tagsRepository.save(tags);
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
@@ -50,8 +50,8 @@ public class TagsService {
     public ResponseEntity<ApiResponse<?>> getTags() {
         try {
             List<Tags> tags = tagsRepository.findAll();
-            List<PostTagsResDTO> optionalTag = tags.stream()
-                    .map(tag -> new PostTagsResDTO(
+            List<PostTagsReqDTO> optionalTag = tags.stream()
+                    .map(tag -> new PostTagsReqDTO(
                             tag.getLabel(),
                             tag.getUuid(),
                             tag.getTagCounts(),

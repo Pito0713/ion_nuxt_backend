@@ -16,19 +16,5 @@ import java.util.List;
 @AllArgsConstructor // 全參數建構子
 public class PostTagsResDTO {
     private String label;
-    private String uuid;
-    private Integer tagCount;
     private String imgURL;
-    private Date createTime;
-    private Date updateTime;
-    private List<Tags.Blogs> blogs;
-    // inner class
-    //  Lombok
-    @Data //  auto getter, setter, toString, equals, hashCode
-    @NoArgsConstructor // 無參數建構子
-    @AllArgsConstructor // 全參數建構子
-    public static class Blogs {
-        private String id;
-        private String title;
-    }
 }
