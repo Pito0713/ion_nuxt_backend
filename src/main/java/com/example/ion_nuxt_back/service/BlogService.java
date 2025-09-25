@@ -60,25 +60,22 @@ public class BlogService {
                 blog.setPreviewText(plainText);
             }
 
-            Blog savedBlog = blogRepository.save(blog);
-            // 取得生成的 ObjectId
-            String blogId = savedBlog.getId();
-
-
-            Optional<Tags> optionalTags = tagsRepository.findByUuid(request.getTagUUID());
-            // target Tags exist check
-            if (optionalTags.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("account_error", 1007));
-            }
-            Tags tagsItem = optionalTags.get();
-
-            String id = tagsItem.getId();
-            Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
-            Tags.Blogs newBlog = new Tags.Blogs(blogId, blog.getTitle());
-            Update update = new Update()
-                    .push("blogs", newBlog);
-            mongoTemplate.updateFirst(query, update, Tags.class);
+//            Blog savedBlog = blogRepository.save(blog);
+//            // 取得生成的 ObjectId
+//            String blogId = savedBlog.getId();
+//            Optional<Tags> optionalTags = tagsRepository.findByUuid(request.getTagUUID());
+//            // target Tags exist check
+//            if (optionalTags.isPresent()) {
+//                Tags tagsItem = optionalTags.get();
+//
+//                String id = tagsItem.getId();
+//                Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+//                Tags.Blogs newBlog = new Tags.Blogs(blogId, blog.getTitle());
+//                Update update = new Update()
+//                        .push("blogs", newBlog);
+//
+//                mongoTemplate.updateFirst(query, update, Tags.class);
+//            }
 
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
@@ -168,10 +165,21 @@ public class BlogService {
     ) {
         try {
             Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+
+            // 使用 Jsoup 函式庫將 HTML 轉換為純文字
+            String plainText;
+            // 截取前 100 個字元
+            if (Jsoup.parse(request.getTextContent()).text().length() > 150) {
+                plainText = Jsoup.parse(request.getTextContent()).text().substring(0, 150) + "...";
+            } else {
+                plainText =  Jsoup.parse(request.getTextContent()).text();
+            }
+
             Update update = new Update()
                     .set("title", request.getTitle())
                     .set("textContent", request.getTextContent())
-                    .set("tags", request.getTagUUID())
+                    .set("previewText", plainText)
+                    .set("tagUUID", request.getTagUUID())
                     .set("updateTime", new Date());
             mongoTemplate.updateFirst(query, update, Blog.class);
             return ResponseEntity.ok(ApiResponse.success(null));
