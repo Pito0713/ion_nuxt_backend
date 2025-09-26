@@ -60,7 +60,7 @@ public class BlogService {
                 blog.setPreviewText(plainText);
             }
 
-//            Blog savedBlog = blogRepository.save(blog);
+            blogRepository.save(blog);
 //            // 取得生成的 ObjectId
 //            String blogId = savedBlog.getId();
 //            Optional<Tags> optionalTags = tagsRepository.findByUuid(request.getTagUUID());
