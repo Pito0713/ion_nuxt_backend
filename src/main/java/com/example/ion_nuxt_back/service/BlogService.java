@@ -12,6 +12,7 @@ import com.example.ion_nuxt_back.repository.TagsRepository;
 import org.bson.types.ObjectId;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -92,13 +93,24 @@ public class BlogService {
 
     public ResponseEntity<ApiResponse<?>> getBlog(
             Integer page,
-            Integer pageSize
+            Integer pageSize,
+            String order
     ) {
         try {
-            Query query = new Query();
-            // 分頁
-            int skip = (page - 1) * pageSize;
-            query.skip(skip).limit(pageSize);
+            Sort.Direction dir = Sort.Direction.DESC;
+            String o = order.trim().toLowerCase();
+            if (o.equals("asc")) dir =  Sort.Direction.ASC;
+
+            Sort sort = Sort.by(
+                    Sort.Order.by("createTime").with(dir),
+                    Sort.Order.by("_id").with(dir) // 次要排序，避免時間相同時不穩定
+            );
+
+            Query query = new Query()
+                    .with(sort)
+                    .skip(Math.max(0, (page - 1) * pageSize))
+                    .limit(pageSize);
+
             List<Blog> blogs = mongoTemplate.find(query, Blog.class);
 
             // 遍歷每個 blog

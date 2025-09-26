@@ -24,9 +24,10 @@ public class BlogController {
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getBlogC(
             @RequestParam int page,
-            @RequestParam int pageSize
+            @RequestParam int pageSize,
+            @RequestParam String order
     ) {
-        return blogService.getBlog(page, pageSize);
+        return blogService.getBlog(page, pageSize, order);
     }
 
     // Get 取得 Blog 文章
