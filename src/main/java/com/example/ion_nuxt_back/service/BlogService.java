@@ -1,6 +1,9 @@
 package com.example.ion_nuxt_back.service;
 import com.example.ion_nuxt_back.common.ApiResponse;
 import com.example.ion_nuxt_back.dto.blogs.requset.PostBlogReqDTO;
+import com.example.ion_nuxt_back.dto.blogs.response.GetBlogResDTO;
+import com.example.ion_nuxt_back.dto.blogs.response.TagDTO;
+import com.example.ion_nuxt_back.dto.tags.resquest.PostTagsReqDTO;
 import com.example.ion_nuxt_back.model.Blog;
 
 import com.example.ion_nuxt_back.model.Tags;
@@ -34,11 +37,12 @@ public class BlogService {
             String userUUID
     ) {
         try {
+
             Blog blog = new Blog();
             blog.setTitle(request.getTitle());
             blog.setTextContent(request.getTextContent());
             blog.setUserUUID(userUUID);
-            blog.setTag(request.getTag());
+            blog.setTagUUID(request.getTagUUID());
             blog.setCreateTime(new Date());
             blog.setUpdateTime(null);
             blog.setBlogCounts(0);
@@ -56,25 +60,22 @@ public class BlogService {
                 blog.setPreviewText(plainText);
             }
 
-            Blog savedBlog = blogRepository.save(blog);
-            // 取得生成的 ObjectId
-            String blogId = savedBlog.getId();
-
-
-            Optional<Tags> optionalTags = tagsRepository.findByUuid(request.getTag());
-            // target Tags exist check
-            if (optionalTags.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("account_error", 1007));
-            }
-            Tags tagsItem = optionalTags.get();
-
-            String id = tagsItem.getId();
-            Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
-            Tags.Blogs newBlog = new Tags.Blogs(blogId, blog.getTitle());
-            Update update = new Update()
-                    .push("blogs", newBlog);
-            mongoTemplate.updateFirst(query, update, Tags.class);
+            blogRepository.save(blog);
+//            // 取得生成的 ObjectId
+//            String blogId = savedBlog.getId();
+//            Optional<Tags> optionalTags = tagsRepository.findByUuid(request.getTagUUID());
+//            // target Tags exist check
+//            if (optionalTags.isPresent()) {
+//                Tags tagsItem = optionalTags.get();
+//
+//                String id = tagsItem.getId();
+//                Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+//                Tags.Blogs newBlog = new Tags.Blogs(blogId, blog.getTitle());
+//                Update update = new Update()
+//                        .push("blogs", newBlog);
+//
+//                mongoTemplate.updateFirst(query, update, Tags.class);
+//            }
 
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
@@ -92,23 +93,46 @@ public class BlogService {
     ) {
         try {
             Query query = new Query();
-//            if (tags != null && !tags.isEmpty() && !"0".equals(tags)) {
-//                // 依你的實際結構二擇一：
-//                // 若 tags 儲存為字串陣列：query.addCriteria(Criteria.where("tags").is(tags) 或 in(tagsList));
-//                // 若 tags 為物件陣列（含 uuid）：用下面這行
-//                query.addCriteria(Criteria.where("tags.uuid").is(tags));
-//            }
-
-
             // 分頁
             int skip = (page - 1) * pageSize;
             query.skip(skip).limit(pageSize);
             List<Blog> blogs = mongoTemplate.find(query, Blog.class);
+
+            // 遍歷每個 blog
+            for (Blog blog : blogs) {
+                TagDTO blogTag = null;
+                if (blog.getTagUUID() != null) {
+                    Optional<Tags> optionalTags = tagsRepository.findByUuid(blog.getTagUUID());
+                    blogTag = new TagDTO();
+                    if (optionalTags.isPresent()) {
+                        Tags tagsItem = optionalTags.get();
+                        blogTag.setLabel(tagsItem.getLabel());
+                        blogTag.setImgURL(tagsItem.getImgURL());
+                    }
+                }
+                // 將 blogTag 物件設定到 blog 中
+                blog.setTag(blogTag);
+            }
+
+            List<GetBlogResDTO> optionalBlog = blogs.stream()
+                    .map(blog -> new GetBlogResDTO(
+                            blog.getId(),
+                            blog.getTitle(),
+                            blog.getTextContent(),
+                            blog.getUserUUID(),
+                            (TagDTO) blog.getTag(),
+                            blog.getPreviewText(),
+                            blog.getCreateTime(),
+                            blog.getUpdateTime(),
+                            blog.getBlogCounts()
+                    ))
+                    .toList();
+
             // 建立一個新的 Query，只保留篩選條件，不要 skip/limit
             Query countQuery = Query.of(query).limit(-1).skip(-1);
             // 總筆數（符合條件的所有資料）
             long total = mongoTemplate.count(countQuery, Blog.class);
-            return ResponseEntity.ok(ApiResponse.success(blogs, (int) total));
+            return ResponseEntity.ok(ApiResponse.success(optionalBlog, (int) total));
         } catch (Exception e) {
         // 回傳錯誤 response
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -141,10 +165,21 @@ public class BlogService {
     ) {
         try {
             Query query = new Query(Criteria.where("_id").is(new ObjectId(id)));
+
+            // 使用 Jsoup 函式庫將 HTML 轉換為純文字
+            String plainText;
+            // 截取前 100 個字元
+            if (Jsoup.parse(request.getTextContent()).text().length() > 150) {
+                plainText = Jsoup.parse(request.getTextContent()).text().substring(0, 150) + "...";
+            } else {
+                plainText =  Jsoup.parse(request.getTextContent()).text();
+            }
+
             Update update = new Update()
                     .set("title", request.getTitle())
                     .set("textContent", request.getTextContent())
-                    .set("tags", request.getTag())
+                    .set("previewText", plainText)
+                    .set("tagUUID", request.getTagUUID())
                     .set("updateTime", new Date());
             mongoTemplate.updateFirst(query, update, Blog.class);
             return ResponseEntity.ok(ApiResponse.success(null));

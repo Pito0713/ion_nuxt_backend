@@ -41,8 +41,7 @@ public class BlogController {
     @PostMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> editBlogC(
             @RequestBody PostBlogReqDTO request,
-            @PathVariable String id,
-            @CookieValue(value = "userAccessToken", required = true) String userToken
+            @PathVariable String id
     ) {
         return blogService.editBlog(request, id);
     }
