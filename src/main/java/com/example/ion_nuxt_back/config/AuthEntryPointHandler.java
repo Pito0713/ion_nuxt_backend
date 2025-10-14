@@ -24,7 +24,7 @@ public class AuthEntryPointHandler implements AuthenticationEntryPoint {
         String body = new com.fasterxml.jackson.databind.ObjectMapper()
                 .writeValueAsString(
                         // 調用 ApiResponse 統一 api 格式
-                        com.example.ion_nuxt_back.common.ApiResponse.error("unauthorized", 1995)
+                        com.example.ion_nuxt_back.common.ApiResponse.error("unauthorized", 1010)
                 );
         response.getWriter().write(body);
     }
