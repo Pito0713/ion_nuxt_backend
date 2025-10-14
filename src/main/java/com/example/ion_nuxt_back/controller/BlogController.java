@@ -25,9 +25,9 @@ public class BlogController {
     public ResponseEntity<ApiResponse<?>> getBlogC(
             @RequestParam int page,
             @RequestParam int pageSize,
-            @RequestParam String order
+            @RequestParam String sort
     ) {
-        return blogService.getBlog(page, pageSize, order);
+        return blogService.getBlog(page, pageSize, sort);
     }
 
     // Get 取得 Blog 文章
