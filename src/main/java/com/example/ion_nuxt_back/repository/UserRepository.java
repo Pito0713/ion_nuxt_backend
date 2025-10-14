@@ -1,5 +1,4 @@
 package com.example.ion_nuxt_back.repository;
-
 import com.example.ion_nuxt_back.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
