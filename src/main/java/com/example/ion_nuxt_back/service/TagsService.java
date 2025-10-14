@@ -3,8 +3,11 @@ import com.example.ion_nuxt_back.common.ApiResponse;
 
 import com.example.ion_nuxt_back.dto.tags.response.PostTagsResDTO;
 import com.example.ion_nuxt_back.dto.tags.response.PostEditTagsResDTO;
+import com.example.ion_nuxt_back.dto.tags.resquest.PostTagsReqBlogDTO;
 import com.example.ion_nuxt_back.dto.tags.resquest.PostTagsReqDTO;
+import com.example.ion_nuxt_back.model.Blog;
 import com.example.ion_nuxt_back.model.Tags;
+import com.example.ion_nuxt_back.repository.BlogRepository;
 import com.example.ion_nuxt_back.repository.TagsRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import java.util.*;
 
 @Service
 public class TagsService {
+    @Autowired private BlogRepository blogRepository;
     @Autowired private TagsRepository tagsRepository;
     @Autowired private MongoTemplate mongoTemplate;
     public ResponseEntity<ApiResponse<?>> postTags(
@@ -50,16 +54,27 @@ public class TagsService {
     public ResponseEntity<ApiResponse<?>> getTags() {
         try {
             List<Tags> tags = tagsRepository.findAll();
+
             List<PostTagsReqDTO> optionalTag = tags.stream()
-                    .map(tag -> new PostTagsReqDTO(
-                            tag.getLabel(),
-                            tag.getUuid(),
-                            tag.getTagCounts(),
-                            tag.getImgURL(),
-                            tag.getCreateTime(),
-                            tag.getUpdateTime(),
-                            tag.getBlogs()
-                    ))
+                    .map(tag -> {
+                        List<Blog> optionalBlogs = blogRepository.findByTagUUID(tag.getUuid());
+                        List<PostTagsReqBlogDTO> blogs = optionalBlogs.stream()
+                                .map(blog -> new PostTagsReqBlogDTO(
+                                        blog.getId(),
+                                        blog.getTitle()
+                                ))
+                                .toList();
+                        //  建立 PostTagsReqDTO，傳入轉換好的 DTO 列表
+                        return new PostTagsReqDTO(
+                                tag.getLabel(),
+                                tag.getUuid(),
+                                tag.getTagCounts(),
+                                tag.getImgURL(),
+                                tag.getCreateTime(),
+                                tag.getUpdateTime(),
+                                blogs
+                        );
+                    })
                     .toList();
 
             return ResponseEntity.ok(ApiResponse.success(optionalTag));

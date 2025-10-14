@@ -91,20 +91,20 @@ public class BlogService {
     public ResponseEntity<ApiResponse<?>> getBlog(
             Integer page,
             Integer pageSize,
-            String order
+            String sort
     ) {
         try {
             Sort.Direction dir = Sort.Direction.DESC;
-            String o = order.trim().toLowerCase();
+            String o = sort.trim().toLowerCase();
             if (o.equals("asc")) dir =  Sort.Direction.ASC;
 
-            Sort sort = Sort.by(
+            Sort order = Sort.by(
                     Sort.Order.by("createTime").with(dir),
                     Sort.Order.by("_id").with(dir) // 次要排序，避免時間相同時不穩定
             );
 
             Query query = new Query()
-                    .with(sort)
+                    .with(order)
                     .skip(Math.max(0, (page - 1) * pageSize))
                     .limit(pageSize);
 
