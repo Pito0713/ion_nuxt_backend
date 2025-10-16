@@ -6,8 +6,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
-import java.util.List;
-
 @Document(collection = "blogs")
 //  Lombok
 @Data //  auto getter, setter, toString, equals, hashCode
@@ -19,7 +17,8 @@ public class Blog {
     private String title;
     private String textContent;
     private String userUUID;
-    private String tag;
+    private Object tag;
+    private String tagUUID;
     private String previewText;
     private Date createTime;
     private Date updateTime;
