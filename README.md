@@ -3,7 +3,7 @@
 使用 Spring Boot 搭配 MongoDB 所構建的簡單 RESTful API，
 提供基本的 CRUD 功能。
 
-## 當前版本: [V1.0.1](###V1.0.1)
+## 當前版本: [V1.0.2](###V1.0.2)
 
 ---
 
@@ -21,6 +21,7 @@ src/main/java/com/example/ion_nuxt_back/
 ├── config
 ├── controller
 │   ├── BlogController.java
+│   ├── ImageKitAuthController.java
 │   ├── TagsController.java
 │   └── UserController.java
 ├── dto
@@ -53,8 +54,11 @@ src/main/java/com/example/ion_nuxt_back/
 @PostMapping // Post 新增 Blog 文章
 public Blog postBlogC() {}
 
-@GetMapping // Get 取的 Blog 文章
+@GetMapping // Get 搜尋 Blog 文章
 public Blog getBlogC() {}
+
+@GetMapping("/{id}")  // Get 取的 Blog 文章
+public Blog getSingleBlogC() {}
 
 @PostMapping("/{id}")  // Post 編輯 Blog 文章
 public Blog editBlogC() {}
@@ -88,12 +92,6 @@ public User logInUserC() {}
 
 @GetMapping("/{uuid}")       // GET 使用者info
 public User getUserInfoC() {}
-
-@PostMapping("/token/refresh")    // Post 重新取得 token
-public User refreshTokenC() {}
-
-@PostMapping("/userPassword")    // POST 修改密碼
-public User userPasswordChangeC() {}
 ```
 
 ### ImageKitAuthController.java
@@ -115,6 +113,13 @@ mongodb.database= Data Local
 使用 MongoDB Atlas，替換對應參數
 
 ---
+
+### V1.0.2
+
+```
+新增 取得單筆 BLOG API
+移除 多餘 API route
+```
 
 ### V1.0.1
 
