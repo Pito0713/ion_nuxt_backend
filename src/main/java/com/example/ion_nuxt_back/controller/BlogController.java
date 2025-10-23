@@ -50,8 +50,8 @@ public class BlogController {
     // Delete 刪除 Blog 文章
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> deleteBlogC(
-            @PathVariable String id,
-            @CookieValue(value = "userAccessToken", required = true) String userToken
+            @PathVariable String id
+            // @CookieValue(value = "userAccessToken", required = true) String userToken
     ) {
         return blogService.deleteBlog(id);
     }

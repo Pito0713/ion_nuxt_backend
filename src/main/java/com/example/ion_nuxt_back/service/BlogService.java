@@ -220,6 +220,19 @@ public class BlogService {
             String id
     ) {
         try {
+            if (( id == null || id.trim().isEmpty())
+            ) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("resource_is_Empty", 1004));
+            }
+            // 先檢查是否存在（MongoRepository.deleteById 不會丟 not found）
+            boolean exists = blogRepository.existsById(id);
+            if (!exists) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("blog_not_found", 1010));
+            }
+
+            blogRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
             // 回傳錯誤 response
