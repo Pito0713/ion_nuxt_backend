@@ -22,4 +22,6 @@ public class User {
     private String refreshToken;
     private Date createTime;
     private String uuid;
+    private String nick;
+    private String infoImg;
 }
