@@ -1,5 +1,7 @@
 package com.example.ion_nuxt_back.service;
 // model
+import com.example.ion_nuxt_back.dto.users.request.editUserReqDTO;
+import com.example.ion_nuxt_back.model.Blog;
 import com.example.ion_nuxt_back.model.User;
 // DTO.request
 import com.example.ion_nuxt_back.dto.users.request.LogInUserReqDTO;
@@ -13,7 +15,13 @@ import com.example.ion_nuxt_back.common.ApiResponse;
 // repository
 import com.example.ion_nuxt_back.repository.UserRepository;
 // springframework
+import org.bson.types.ObjectId;
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +33,7 @@ import java.util.*;
 public class UserService {
     @Autowired private UserRepository userRepository;
     @Autowired private BCryptPasswordEncoder passwordEncoder;
+    @Autowired private MongoTemplate mongoTemplate;
 
     // POST 新增使用者 註冊
     public ResponseEntity<ApiResponse<?>> registerUser( RegisterUserReqDTO request ) {
@@ -52,6 +61,8 @@ public class UserService {
             user.setAccessToken(accessToken);
             user.setRefreshToken(refreshToken);
             user.setCreateTime(new Date());
+            user.setNick("");
+            user.setInfoImg("");
             user.setUuid(UUID.randomUUID().toString()); // 生成 UUID
             userRepository.save(user);
             return ResponseEntity.ok(ApiResponse.success(null));
@@ -109,9 +120,50 @@ public class UserService {
                     userOptionalUser.getUuid(),
                     userOptionalUser.getAccount(),
                     userOptionalUser.getAccessToken(),
-                    userOptionalUser.getRefreshToken()
+                    userOptionalUser.getRefreshToken(),
+                    userOptionalUser.getNick(),
+                    userOptionalUser.getInfoImg()
             );
             return ResponseEntity.ok(ApiResponse.success(userInfoDTO));
+        } catch (Exception e) {
+            // 回傳錯誤 response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("server_error", 1003));
+        }
+    }
+
+    // POST 修改使用者
+    public ResponseEntity<ApiResponse<?>> editUser(
+            editUserReqDTO request,
+            String userUUID
+            ) {
+        try {
+            System.out.println(userUUID);
+            String nick = request.getNick();
+            String infoImg = request.getInfoImg();
+            if (( userUUID == null || userUUID.trim().isEmpty() ) || ( nick == null || nick.trim().isEmpty() ) || ( infoImg == null || infoImg.trim().isEmpty() )
+            ) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("resource_is_Empty", 1004));
+            }
+            // conditional: uuid值 判斷是有存在
+            Optional<User> optionalUser = userRepository.findByUuid(userUUID);
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("account_error", 1007));
+            }
+
+            // === 用 MongoTemplate 做部份欄位更新 ===
+            Query query = Query.query(Criteria.where("uuid").is(userUUID));
+
+            // 如果 nick / infoImg 在 User 頂層，這樣寫：
+            Update update = new Update()
+                    .set("nick", nick)
+                    .set("infoImg", infoImg);
+
+            mongoTemplate.updateFirst(query, update, User.class);
+
+            return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
             // 回傳錯誤 response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

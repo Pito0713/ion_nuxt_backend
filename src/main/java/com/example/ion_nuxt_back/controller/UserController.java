@@ -3,6 +3,7 @@ package com.example.ion_nuxt_back.controller;
 import com.example.ion_nuxt_back.dto.users.request.LogInUserReqDTO;
 import com.example.ion_nuxt_back.dto.users.request.RegisterUserReqDTO;
 // springframework
+import com.example.ion_nuxt_back.dto.users.request.editUserReqDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -35,10 +36,19 @@ public class UserController {
     }
 
     // GET 使用者info
-    @GetMapping("/{uuid}")
+    @GetMapping
     public ResponseEntity<ApiResponse<?>> getUserInfoC(
-            @PathVariable String uuid
+            @CookieValue(value = "userUUID", required = true) String uuid
     ) {
         return userService.getUserInfo(uuid);
+    }
+
+    // POST 修改會員資料
+    @PostMapping("/edit")
+    public ResponseEntity<ApiResponse<?>> editUserC(
+            @RequestBody editUserReqDTO request,
+            @CookieValue(value = "userUUID", required = true) String userUUID
+    ) {
+        return userService.editUser(request, userUUID);
     }
 }

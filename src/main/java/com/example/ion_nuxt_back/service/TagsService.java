@@ -14,6 +14,7 @@ import com.example.ion_nuxt_back.model.Tags;
 import com.example.ion_nuxt_back.repository.BlogRepository;
 import com.example.ion_nuxt_back.repository.TagsRepository;
 // springframework
+import com.mongodb.client.result.UpdateResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -139,14 +140,32 @@ public class TagsService {
             String uuid
     ) {
         try {
+            if (( uuid == null || uuid.trim().isEmpty())
+            ) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.error("resource_is_Empty", 1004));
+            }
+            // 先檢查是否存在（MongoRepository.deleteById 不會丟 not found）
+            // 取得該 UUID 資料
             Optional<Tags> optionalTags = tagsRepository.findByUuid(uuid);
 
             // conditional: 判斷標籤值 是否空值
             if (optionalTags.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("account_error", 1009));
+                        .body(ApiResponse.error("tag_not_found", 1009));
             }
 
+            // update
+            Tags tagsItem = optionalTags.get();
+
+            // 3) 先清 Blog 參照（避免刪了 tag 後 Blog 指到不存在的 uuid）
+            Query queryUUID = Query.query(Criteria.where("tagUUID").is(uuid));
+            Update UpdateNull = new Update().unset("tagUUID"); // 也可改成 .set("tagUUID", null)
+            UpdateResult ur = mongoTemplate.updateMulti(queryUUID, UpdateNull, Blog.class);
+
+            String id = tagsItem.getId();
+
+            tagsRepository.deleteById(id);
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
             // 回傳錯誤 response
