@@ -1,7 +1,7 @@
 package com.example.ion_nuxt_back.service;
 // model
 import com.example.ion_nuxt_back.dto.users.request.editUserReqDTO;
-import com.example.ion_nuxt_back.model.Blog;
+import com.example.ion_nuxt_back.dto.users.response.UserAssetDTO;
 import com.example.ion_nuxt_back.model.User;
 // DTO.request
 import com.example.ion_nuxt_back.dto.users.request.LogInUserReqDTO;
@@ -15,8 +15,6 @@ import com.example.ion_nuxt_back.common.ApiResponse;
 // repository
 import com.example.ion_nuxt_back.repository.UserRepository;
 // springframework
-import org.bson.types.ObjectId;
-import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -64,6 +62,7 @@ public class UserService {
             user.setNick("");
             user.setInfoImg("");
             user.setUuid(UUID.randomUUID().toString()); // 生成 UUID
+            user.setRole("guest");
             userRepository.save(user);
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (Exception e) {
@@ -141,7 +140,7 @@ public class UserService {
             System.out.println(userUUID);
             String nick = request.getNick();
             String infoImg = request.getInfoImg();
-            if (( userUUID == null || userUUID.trim().isEmpty() ) || ( nick == null || nick.trim().isEmpty() ) || ( infoImg == null || infoImg.trim().isEmpty() )
+            if (( userUUID == null || userUUID.trim().isEmpty())
             ) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponse.error("resource_is_Empty", 1004));
@@ -164,6 +163,29 @@ public class UserService {
             mongoTemplate.updateFirst(query, update, User.class);
 
             return ResponseEntity.ok(ApiResponse.success(null));
+        } catch (Exception e) {
+            // 回傳錯誤 response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("server_error", 1003));
+        }
+    }
+
+    // GET 使用者info
+    public ResponseEntity<ApiResponse<?>> getUserAsset( ) {
+        try {
+            // conditional: Role值 判斷是有存在
+            Optional<User> optionalUser = userRepository.findByRole("admin");
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error("Role_is_Empty", 1001));
+            }
+
+            User userOptionalUser = optionalUser.get();
+            UserAssetDTO userImgDTO = new UserAssetDTO(
+                    userOptionalUser.getNick(),
+                    userOptionalUser.getInfoImg()
+            );
+            return ResponseEntity.ok(ApiResponse.success(userImgDTO));
         } catch (Exception e) {
             // 回傳錯誤 response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

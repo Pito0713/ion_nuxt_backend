@@ -43,6 +43,13 @@ public class UserController {
         return userService.getUserInfo(uuid);
     }
 
+    // GET 使用者Img
+    @GetMapping("/asset")
+    public ResponseEntity<ApiResponse<?>> getUserAssetC(
+    ) {
+        return userService.getUserAsset();
+    }
+
     // POST 修改會員資料
     @PostMapping("/edit")
     public ResponseEntity<ApiResponse<?>> editUserC(
