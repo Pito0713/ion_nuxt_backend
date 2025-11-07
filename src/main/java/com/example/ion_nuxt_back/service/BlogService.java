@@ -46,7 +46,7 @@ public class BlogService {
             String textContent = request.getTextContent();
             String tagUUID = request.getTagUUID();
             // conditional: title 跟 textContent  tagUUID 判斷是否空值
-            if (( title == null || title.trim().isEmpty()) || ( textContent == null || textContent.trim().isEmpty()) || ( tagUUID == null || tagUUID.trim().isEmpty())
+            if (( title == null || title.trim().isEmpty()) || ( textContent == null || textContent.trim().isEmpty())
             ) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponse.error("resource_is_Empty", 1004));
@@ -56,10 +56,15 @@ public class BlogService {
             blog.setTitle(title);
             blog.setTextContent(textContent);
             blog.setUserUUID(userUUID);
-            blog.setTagUUID(tagUUID);
             blog.setCreateTime(new Date());
             blog.setUpdateTime(null);
             blog.setBlogCounts(0);
+
+            if ( tagUUID == null || tagUUID.trim().isEmpty() || tagUUID.equals("none")) {
+                blog.setTagUUID("none");
+            } else {
+                blog.setTagUUID(tagUUID);
+            }
 
             // 使用 Jsoup 函式庫將 HTML 轉換為純文字
             String plainText = Jsoup.parse(textContent).text();
@@ -115,7 +120,11 @@ public class BlogService {
                         Tags tagsItem = optionalTags.get();
                         blogTag.setLabel(tagsItem.getLabel());
                         blogTag.setImgURL(tagsItem.getImgURL());
+                    } else {
+                        blogTag.setLabel("none");
+                        blogTag.setImgURL(null);
                     }
+
                 }
                 // 將 blogTag 物件設定到 blog 中
                 blog.setTag(blogTag);
@@ -141,9 +150,9 @@ public class BlogService {
             long total = mongoTemplate.count(countQuery, Blog.class);
             return ResponseEntity.ok(ApiResponse.success(optionalBlog, (int) total));
         } catch (Exception e) {
-        // 回傳錯誤 response
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("server_error", 1003));
+            // 回傳錯誤 response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("server_error", 1003));
         }
     }
 
